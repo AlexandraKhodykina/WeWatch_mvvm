@@ -40,10 +40,11 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     // Room components
-    implementation 'androidx.room:room-runtime:2.5.2'
-    implementation 'androidx.room:room-ktx:2.5.2'
+    implementation 'androidx.room:room-runtime:2.6.0'
+    implementation 'androidx.room:room-ktx:2.6.0'
     implementation 'androidx.room:room-rxjava2:2.5.2'
-    kapt 'androidx.room:room-compiler:2.5.0'
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.1"
+    kapt 'androidx.room:room-compiler:2.6.0'
     testImplementation 'androidx.room:room-testing:2.5.2'
 
     // Lifecycle components
@@ -59,6 +60,9 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     //Picasso
     implementation 'com.squareup.picasso:picasso:2.71828'
+
+    // Корутины
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
 
     //Testing
     testImplementation 'junit:junit:4.13.2'

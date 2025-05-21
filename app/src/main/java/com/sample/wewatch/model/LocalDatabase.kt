@@ -14,21 +14,24 @@ abstract class LocalDatabase : RoomDatabase() {
   abstract fun movieDao(): MovieDao
 
     companion object {
-      private val lock = Any()
-      
-      private const val DB_NAME = "movie_database"
+      @Volatile
       private var INSTANCE: LocalDatabase? = null
 
+      private const val DB_NAME = "movie_database"
+
       fun getInstance(application: Application): LocalDatabase {
-        synchronized(lock) {
-          if (INSTANCE == null) {
-            INSTANCE =
-                Room.databaseBuilder(application, LocalDatabase::class.java, DB_NAME)
-                    .allowMainThreadQueries()
-                    .build()
-          }
+        return INSTANCE ?: synchronized(this) {
+          val instance = Room.databaseBuilder(
+            application,
+            LocalDatabase::class.java,
+            DB_NAME
+          )
+            .fallbackToDestructiveMigration() // Добавлено для миграций
+            .build()
+          INSTANCE = instance
+          instance
         }
-        return INSTANCE!!
       }
+
     }
 }

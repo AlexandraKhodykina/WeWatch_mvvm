@@ -5,6 +5,7 @@ import com.sample.wewatch.network.RetrofitClient.API_KEY
 import io.reactivex.Observable
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.Response
 
 // const val API_KEY = "e764a27cb17b01f54152a69437559e46"
 // https://api.themoviedb.org/3/search/movie?api_key=<<api_key>>&language=en-US&page=1&include_adult=false
@@ -13,6 +14,17 @@ import retrofit2.http.Query
 // https://omdbapi.com/?apikey=1dbc7755&s=Dud
 
 interface RetrofitInterface {
-  @GET("/")
-  fun searchMovie(@Query("apikey") api_key: String, @Query("s") s: String): Observable<TmdbResponse>
+  //@GET("/")
+  //fun searchMovie(@Query("apikey") api_key: String, @Query("s") s: String): Observable<TmdbResponse>
+  @GET("search/movie")
+  suspend fun searchMovie(
+    @Query("api_key") apiKey: String,
+    @Query("query") query: String
+  ): Response<TmdbResponse>  // Response для обработки HTTP-ошибок
+
+  // Другие методы API (например, для получения популярных фильмов)
+  @GET("movie/popular")
+  suspend fun getPopularMovies(
+    @Query("api_key") apiKey: String
+  ): Response<TmdbResponse>
 }
