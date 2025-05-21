@@ -15,45 +15,15 @@ data class Movie(
   @SerializedName("imdbID")
   @Expose
   var imdbID: String? = null,
-  /*
-  @SerializedName("video")
-  @Expose
-  var video: Boolean? = null,
-  @SerializedName("vote_count")
-  @Expose
-  var voteCount: Int? = null,
-  @SerializedName("vote_average")
-  @Expose
-  var voteAverage: Float? = null,
-  */
+
   @SerializedName("Title")
   @Expose
   var title: String? = null,
-  /*
-  @SerializedName("popularity")
-  @Expose
-  var popularity: Float? = null,
-  */
+
   @SerializedName("Poster")
   @Expose
   var posterPath: String? = null,
-  /*
-  @SerializedName("original_language")
-  @Expose
-  var originalLanguage: String? = null,
-  @SerializedName("original_title")
-  @Expose
-  var originalTitle: String? = null,
-  @SerializedName("genre_ids")
-  @Expose
-  var genreIds: List<Int>? = null,
-  @SerializedName("backdrop_path")
-  @Expose
-  var backdropPath: String? = null,
-  @SerializedName("adult")
-  @Expose
-  var adult: Boolean? = null,
-  */
+
   @SerializedName("Type")
   @Expose
   var overview: String? = null,

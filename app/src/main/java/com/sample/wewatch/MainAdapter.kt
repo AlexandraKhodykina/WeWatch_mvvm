@@ -10,14 +10,28 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.sample.wewatch.model.Movie
 import com.sample.wewatch.network.RetrofitClient
-
 import com.squareup.picasso.Picasso
-
 import java.util.HashSet
 
-class MainAdapter(internal var movieList: List<Movie>, internal var context: Context) : RecyclerView.Adapter<MainAdapter.MoviesHolder>() {
-  // HashMap to keep track of which items were selected for deletion
-  val selectedMovies = HashSet<Movie>()
+class MainAdapter(
+  private var movieList: List<Movie>,
+  private val context: Context,
+  private val onDeleteClick: (Movie) -> Unit
+) : RecyclerView.Adapter<MainAdapter.MoviesHolder>() {
+
+  private val selectedMovies = mutableSetOf<Movie>()
+
+  fun updateMovies(newMovies: List<Movie>) {
+    movieList = newMovies
+    notifyDataSetChanged()
+  }
+
+  fun getSelectedMovies(): Set<Movie> = selectedMovies
+
+  fun clearSelection() {
+    selectedMovies.clear()
+    notifyDataSetChanged()
+  }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MoviesHolder {
     val v = LayoutInflater.from(context).inflate(R.layout.item_movie_main, parent, false)
@@ -25,42 +39,30 @@ class MainAdapter(internal var movieList: List<Movie>, internal var context: Con
   }
 
   override fun onBindViewHolder(holder: MoviesHolder, position: Int) {
-    holder.titleTextView.text = movieList[position].title
-    holder.releaseDateTextView.text = movieList[position].releaseDate
-    if (movieList[position].posterPath.equals("")) {
+    val movie = movieList[position]
+    holder.titleTextView.text = movie.title
+    holder.releaseDateTextView.text = movie.releaseDate
+    if (movie.posterPath.isEmpty()) {
       holder.movieImageView.setImageDrawable(context.getDrawable(R.drawable.ic_local_movies_gray))
     } else {
-      Picasso.get().load(RetrofitClient.TMDB_IMAGEURL + movieList[position].posterPath).into(holder.movieImageView)
+      Picasso.get().load(RetrofitClient.TMDB_IMAGEURL + movie.posterPath).into(holder.movieImageView)
     }
-  }
-
-  override fun getItemCount(): Int {
-    return movieList.size
-  }
-
-  inner class MoviesHolder(v: View) : RecyclerView.ViewHolder(v) {
-
-    internal var titleTextView: TextView
-    internal var releaseDateTextView: TextView
-    internal var movieImageView: ImageView
-    internal var checkBox: CheckBox
-
-    init {
-      titleTextView = v.findViewById(R.id.title_textview)
-      releaseDateTextView = v.findViewById(R.id.release_date_textview)
-      movieImageView = v.findViewById(R.id.movie_imageview)
-      checkBox = v.findViewById(R.id.checkbox)
-      checkBox.setOnClickListener {
-        val adapterPosition = adapterPosition
-        if (!selectedMovies.contains(movieList[adapterPosition])) {
-          checkBox.isChecked = true
-          selectedMovies.add(movieList[adapterPosition])
-        } else {
-          checkBox.isChecked = false
-          selectedMovies.add(movieList[adapterPosition])
-        }
+    holder.checkBox.isChecked = selectedMovies.contains(movie)
+    holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
+      if (isChecked) {
+        selectedMovies.add(movie)
+      } else {
+        selectedMovies.remove(movie)
       }
     }
+  }
 
+  override fun getItemCount(): Int = movieList.size
+
+  inner class MoviesHolder(v: View) : RecyclerView.ViewHolder(v) {
+    val titleTextView: TextView = v.findViewById(R.id.title_textview)
+    val releaseDateTextView: TextView = v.findViewById(R.id.release_date_textview)
+    val movieImageView: ImageView = v.findViewById(R.id.movie_imageview)
+    val checkBox: CheckBox = v.findViewById(R.id.checkbox)
   }
 }

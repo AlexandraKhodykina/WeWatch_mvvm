@@ -19,14 +19,13 @@ class MainViewModel (private val repository: MovieRepository) : ViewModel() {
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    fun refreshMovies() {
+    fun insertMovie(movie: Movie) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                // Если нужно принудительно обновить данные (например, из API)
-                // repository.refreshMoviesFromApi()
+                repository.insertMovie(movie)
             } catch (e: Exception) {
-                _errorMessage.value = "Ошибка обновления: ${e.message}"
+                _errorMessage.value = "Error adding movie: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -39,12 +38,13 @@ class MainViewModel (private val repository: MovieRepository) : ViewModel() {
                 _isLoading.value = true
                 repository.deleteMovie(movie)
             } catch (e: Exception) {
-                _errorMessage.value = "Ошибка удаления: ${e.message}"
+                _errorMessage.value = "Error deleting movie: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
     fun clearErrorMessage() {
         _errorMessage.value = null
     }

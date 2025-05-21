@@ -11,69 +11,98 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.sample.wewatch.model.LocalDataSource
 import com.sample.wewatch.model.Movie
-import com.sample.wewatch.network.RetrofitClient.TMDB_IMAGEURL
-
+import androidx.activity.viewModels
+import com.sample.wewatch.model.MovieRepository
+//import com.sample.wewatch.network.RetrofitClient.TMDB_IMAGEURL
 import com.squareup.picasso.Picasso
 
 open class AddMovieActivity : AppCompatActivity() {
   private lateinit var titleEditText: EditText
   private lateinit var releaseDateEditText: EditText
   private lateinit var movieImageView: ImageView
-  private lateinit var dataSource: LocalDataSource
+  //private lateinit var dataSource: LocalDataSource
+  private val viewModel: AddMovieViewModel by viewModels {
+    AddMovieViewModelFactory(MovieRepository(LocalDataSource(application)))
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_add_movie)
     setupViews()
-    dataSource = LocalDataSource(application)
+    //dataSource = LocalDataSource(application)
+    setupObservers()
   }
 
-  fun setupViews() {
+  private fun setupViews() {
     titleEditText = findViewById(R.id.movie_title)
     releaseDateEditText = findViewById(R.id.movie_release_date)
     movieImageView = findViewById(R.id.movie_imageview)
   }
 
-  //search onClick
+  private fun setupObservers() {
+    // Наблюдение за данными фильма из поиска
+    viewModel.movieData.observe(this) { movie ->
+      movie?.let {
+        titleEditText.setText(it.title)
+        releaseDateEditText.setText(it.releaseDate)
+        movieImageView.tag = it.posterPath
+        if (it.posterPath.isNotEmpty()) {
+          Picasso.get().load(RetrofitClient.TMDB_IMAGEURL + it.posterPath).into(movieImageView)
+        }
+      }
+    }
+
+    // Наблюдение за результатом добавления
+    viewModel.addMovieResult.observe(this) { success ->
+      if (success) {
+        setResult(Activity.RESULT_OK)
+        finish()
+      } else {
+        showToast("Movie could not be added.")
+      }
+    }
+
+    // Наблюдение за ошибками
+    viewModel.errorMessage.observe(this) { error ->
+      error?.let {
+        showToast(it)
+        viewModel.clearErrorMessage()
+      }
+    }
+  }
+
   fun goToSearchMovieActivity(v: View) {
     val title = titleEditText.text.toString()
-    val intent = Intent(this@AddMovieActivity, SearchActivity::class.java)
+    val intent = Intent(this, SearchActivity::class.java)
     intent.putExtra(SearchActivity.SEARCH_QUERY, title)
     startActivityForResult(intent, SEARCH_MOVIE_ACTIVITY_REQUEST_CODE)
   }
 
-  //addMovie onClick
   fun onClickAddMovie(v: View) {
-
-    if (TextUtils.isEmpty(titleEditText.text)) {
+    val title = titleEditText.text.toString()
+    if (title.isEmpty()) {
       showToast("Movie title cannot be empty")
-    } else {
-      val title = titleEditText.text.toString()
-      val releaseDate = releaseDateEditText.text.toString()
-      val posterPath = if (movieImageView.tag != null) movieImageView.tag.toString() else ""
-
-      val movie = Movie(title = title, releaseDate = releaseDate, posterPath = posterPath)
-      dataSource.insert(movie)
-
-      setResult(Activity.RESULT_OK)
-      finish()
+      return
     }
+    val releaseDate = releaseDateEditText.text.toString()
+    val posterPath = movieImageView.tag?.toString() ?: ""
+    viewModel.addMovie(title, releaseDate, posterPath)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
-
-    this@AddMovieActivity.runOnUiThread {
-      titleEditText.setText(data?.getStringExtra(SearchActivity.EXTRA_TITLE))
-      releaseDateEditText.setText(data?.getStringExtra(SearchActivity.EXTRA_RELEASE_DATE))
-      movieImageView.tag = data?.getStringExtra(SearchActivity.EXTRA_POSTER_PATH)
-      Picasso.get().load(TMDB_IMAGEURL + data?.getStringExtra(SearchActivity.`EXTRA_POSTER_PATH`)).into(movieImageView)
+    if (requestCode == SEARCH_MOVIE_ACTIVITY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+      val title = data?.getStringExtra(SearchActivity.EXTRA_TITLE) ?: ""
+      val releaseDate = data?.getStringExtra(SearchActivity.EXTRA_RELEASE_DATE) ?: ""
+      val posterPath = data?.getStringExtra(SearchActivity.EXTRA_POSTER_PATH) ?: ""
+      viewModel.setMovieData(title, releaseDate, posterPath)
     }
   }
 
-  fun showToast(string: String) {
-    Toast.makeText(this@AddMovieActivity, string, Toast.LENGTH_LONG).show()
+  private fun showToast(message: String) {
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
   }
+
 
   companion object {
     const val SEARCH_MOVIE_ACTIVITY_REQUEST_CODE = 2

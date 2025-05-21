@@ -17,6 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sample.wewatch.model.LocalDataSource
 import com.sample.wewatch.model.Movie
+import androidx.activity.viewModels
+//viewModels???
+import com.sample.wewatch.model.MovieRepository
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 
@@ -28,98 +31,76 @@ import io.reactivex.schedulers.Schedulers
 class MainActivity : AppCompatActivity() {
 
   private lateinit var moviesRecyclerView: RecyclerView
-  private var adapter: MainAdapter? = null
+  private lateinit var adapter: MainAdapter
   private lateinit var fab: FloatingActionButton
   private lateinit var noMoviesLayout: LinearLayout
 
-  private lateinit var dataSource: LocalDataSource
-  private val compositeDisposable = CompositeDisposable()
+  private val viewModel: MainViewModel by viewModels {
+    MainViewModelFactory(MovieRepository(LocalDataSource(application)))
+  }
 
-  private val TAG = "MainActivity"
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
-
     setupViews()
-  }
-
-  override fun onStart() {
-    super.onStart()
-    dataSource = LocalDataSource(application)
-    getMyMoviesList()
-  }
-
-  override fun onStop() {
-    super.onStop()
-    compositeDisposable.clear()
+    setupObservers()
   }
 
   private fun setupViews() {
     moviesRecyclerView = findViewById(R.id.movies_recyclerview)
     moviesRecyclerView.layoutManager = LinearLayoutManager(this)
+    adapter = MainAdapter(emptyList(), this) { movie ->
+      viewModel.deleteMovie(movie)
+    }
+    moviesRecyclerView.adapter = adapter
     fab = findViewById(R.id.fab)
     noMoviesLayout = findViewById(R.id.no_movies_layout)
     supportActionBar?.title = "Movies to Watch"
   }
 
-  private fun getMyMoviesList() {
-    val myMoviesDisposable = myMoviesObservable
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeWith(observer)
+  private fun setupObservers() {
+    // Наблюдение за списком фильмов
+    viewModel.movies.observe(this) { movies ->
+      displayMovies(movies)
+    }
 
-    compositeDisposable.add(myMoviesDisposable)
-  }
-
-  private val myMoviesObservable: Observable<List<Movie>>
-    get() = dataSource.allMovies
-
-
-  private val observer: DisposableObserver<List<Movie>>
-    get() = object : DisposableObserver<List<Movie>>() {
-
-      override fun onNext(movieList: List<Movie>) {
-        displayMovies(movieList)
-      }
-
-      override fun onError(@NonNull e: Throwable) {
-        Log.d(TAG, "Error$e")
-        e.printStackTrace()
-        displayError("Error fetching movie list")
-      }
-
-      override fun onComplete() {
-        Log.d(TAG, "Completed")
+    // Наблюдение за ошибками
+    viewModel.errorMessage.observe(this) { error ->
+      error?.let {
+        showToast(it)
+        viewModel.clearErrorMessage()
       }
     }
 
-  fun displayMovies(movieList: List<Movie>?) {
-    if (movieList == null || movieList.size == 0) {
-      Log.d(TAG, "No movies to display")
-      moviesRecyclerView.visibility = INVISIBLE
-      noMoviesLayout.visibility = VISIBLE
+    // Наблюдение за состоянием загрузки
+    viewModel.isLoading.observe(this) { isLoading ->
+      // Можно добавить ProgressBar в layout и показывать/скрывать его
+    }
+  }
+
+  private fun displayMovies(movieList: List<Movie>?) {
+    if (movieList.isNullOrEmpty()) {
+      moviesRecyclerView.visibility = View.INVISIBLE
+      noMoviesLayout.visibility = View.VISIBLE
     } else {
-      adapter = MainAdapter(movieList, this@MainActivity)
-      moviesRecyclerView.adapter = adapter
-
-      moviesRecyclerView.visibility = VISIBLE
-      noMoviesLayout.visibility = INVISIBLE
+      adapter.updateMovies(movieList)
+      moviesRecyclerView.visibility = View.VISIBLE
+      noMoviesLayout.visibility = View.INVISIBLE
     }
   }
 
-  //fab onClick
   fun goToAddMovieActivity(v: View) {
-    val myIntent = Intent(this@MainActivity, AddMovieActivity::class.java)
-    startActivityForResult(myIntent, ADD_MOVIE_ACTIVITY_REQUEST_CODE)
+    val intent = Intent(this, AddMovieActivity::class.java)
+    startActivityForResult(intent, ADD_MOVIE_ACTIVITY_REQUEST_CODE)
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+  override fun onActivityResult(requestCode disposing: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
-    if (requestCode == ADD_MOVIE_ACTIVITY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+    if (requestCode == ADD_MOVIE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
       showToast("Movie successfully added.")
     } else {
-      displayError("Movie could not be added.")
+      showToast("Movie could not be added.")
     }
   }
 
@@ -130,28 +111,22 @@ class MainActivity : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     if (item.itemId == R.id.deleteMenuItem) {
-      val adapter = this.adapter
-      if (adapter != null) {
-        for (movie in adapter.selectedMovies) {
-          dataSource.delete(movie)
-        }
-        if (adapter.selectedMovies.size == 1) {
-          showToast("Movie deleted")
-        } else if (adapter.selectedMovies.size > 1) {
-          showToast("Movies deleted")
-        }
+      adapter.getSelectedMovies().forEach { movie ->
+        viewModel.deleteMovie(movie)
       }
+      val count = adapter.getSelectedMovies().size
+      if (count == 1) {
+        showToast("Movie deleted")
+      } else if (count > 1) {
+        showToast("Movies deleted")
+      }
+      adapter.clearSelection()
     }
-
     return super.onOptionsItemSelected(item)
   }
 
-  fun showToast(str: String) {
-    Toast.makeText(this@MainActivity, str, Toast.LENGTH_LONG).show()
-  }
-
-  fun displayError(e: String) {
-    showToast(e)
+  private fun showToast(message: String) {
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
   }
 
   companion object {
