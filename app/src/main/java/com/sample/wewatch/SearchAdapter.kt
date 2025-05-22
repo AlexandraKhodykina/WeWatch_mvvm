@@ -9,50 +9,46 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.sample.wewatch.model.Movie
 import com.squareup.picasso.Picasso
+import com.sample.wewatch.network.RetrofitClient
 
 
-class SearchAdapter(var movieList: List<Movie>, var context: Context, var listener: SearchActivity.RecyclerItemListener) : RecyclerView.Adapter<SearchAdapter.SearchMoviesHolder>() {
+class SearchAdapter(
+  private var movieList: List<Movie>,
+  private val context: Context,
+  private val onItemClick: (Movie) -> Unit
+) : RecyclerView.Adapter<SearchAdapter.SearchMoviesHolder>() {
+
+  fun updateMovies(newMovies: List<Movie>) {
+    movieList = newMovies
+    notifyDataSetChanged()
+  }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchMoviesHolder {
     val view = LayoutInflater.from(context).inflate(R.layout.item_movie_details, parent, false)
-
-    val viewHolder = SearchMoviesHolder(view)
-    view.setOnClickListener { v -> listener.onItemClick(v, viewHolder.adapterPosition) }
-    return viewHolder
+    return SearchMoviesHolder(view)
   }
 
   override fun onBindViewHolder(holder: SearchMoviesHolder, position: Int) {
-
-    holder.titleTextView.text = movieList[position].title
-    holder.releaseDateTextView.text = movieList[position].getReleaseYearFromDate()
-    holder.overviewTextView.text = movieList[position].overview
-
-    if (movieList[position].posterPath != "N/A") {
-      //Picasso.get().load("https://image.tmdb.org/t/p/w500/" + movieList[position].posterPath).into(holder.movieImageView)
-      Picasso.get().load("" + movieList[position].posterPath).into(holder.movieImageView)
-      //https://m.media-amazon.com/images/M/
+    val movie = movieList[position]
+    holder.titleTextView.text = movie.title
+    holder.releaseDateTextView.text = movie.getReleaseYearFromDate()
+    holder.overviewTextView.text = movie.overview
+    if (movie.posterPath != "N/A" && movie.posterPath != null) {
+      Picasso.get().load(RetrofitClient.IMAGE_URL + movie.posterPath).into(holder.movieImageView)
+    } else {
+      holder.movieImageView.setImageDrawable(context.getDrawable(R.drawable.ic_local_movies_gray))
+    }
+    holder.itemView.setOnClickListener {
+      onItemClick(movie)
     }
   }
 
-  override fun getItemCount(): Int {
-    return movieList.size
-  }
-
-  fun getItemAtPosition(pos: Int): Movie {
-    return movieList[pos]
-  }
+  override fun getItemCount(): Int = movieList.size
 
   inner class SearchMoviesHolder(v: View) : RecyclerView.ViewHolder(v) {
-
-    var titleTextView: TextView = v.findViewById(R.id.title_textview)
-    var overviewTextView: TextView = v.findViewById(R.id.overview_overview)
-    var releaseDateTextView: TextView = v.findViewById(R.id.release_date_textview)
-    var movieImageView: ImageView = v.findViewById(R.id.movie_imageview)
-
-    init {
-      v.setOnClickListener { v: View ->
-        listener.onItemClick(v, adapterPosition)
-      }
-    }
+    val titleTextView: TextView = v.findViewById(R.id.title_textview)
+    val overviewTextView: TextView = v.findViewById(R.id.overview_overview)
+    val releaseDateTextView: TextView = v.findViewById(R.id.release_date_textview)
+    val movieImageView: ImageView = v.findViewById(R.id.movie_imageview)
   }
 }

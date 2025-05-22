@@ -14,20 +14,13 @@ import retrofit2.Response
 // https://omdbapi.com/?apikey=1dbc7755&s=Dud
 
 interface RetrofitInterface {
-  //@GET("/")
-  //fun searchMovie(@Query("apikey") api_key: String, @Query("s") s: String): Observable<TmdbResponse>
-  @GET("search/movie")
-  suspend fun searchMovie(
-    @Query("api_key") apiKey: String,
-    @Query("query") query: String
-  ): Response<TmdbResponse>  // Response для обработки HTTP-ошибок
-
-  // Другие методы API (например, для получения популярных фильмов)
-  @GET("movie/popular")
-  suspend fun getPopularMovies(
-    @Query("api_key") apiKey: String
-  ): Response<TmdbResponse>
+    @GET(".")
+    suspend fun searchMovie(
+      @Query("apikey") apiKey: String,
+      @Query("s") query: String
+    ): Response<TmdbResponse>
 }
+
 
 
 

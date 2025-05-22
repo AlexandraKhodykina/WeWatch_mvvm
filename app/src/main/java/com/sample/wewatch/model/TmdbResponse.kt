@@ -3,7 +3,7 @@ package com.sample.wewatch.model
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
-class TmdbResponse {
+data class TmdbResponse (
   /*
   @SerializedName("page")
   @Expose
@@ -11,7 +11,7 @@ class TmdbResponse {
   */
   @SerializedName("totalResults")
   @Expose
-  var totalResults: Int? = null
+  var totalResults: Int? = null,
   /*
   @SerializedName("total_pages")
   @Expose
@@ -19,8 +19,8 @@ class TmdbResponse {
   */
   @SerializedName("Response")
   @Expose
-  var response: Boolean? = false
+  var response: Boolean? = false,
   @SerializedName("Search")
   @Expose
   var results: List<Movie>? = null
-}
+)

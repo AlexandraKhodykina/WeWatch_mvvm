@@ -22,24 +22,29 @@ open class RemoteDataSource {
     //}
     // 1. Заменяем Observable на suspend-функцию
     suspend fun searchMovies(query: String): List<Movie> {
-        return try {
-            val response = RetrofitClient.moviesApi
-                .searchMovie(
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Searching movies for query: $query")
+                val response = RetrofitClient.moviesApi.searchMovie(
                     apiKey = RetrofitClient.API_KEY,
                     query = query
-                )
-
-            response.Search?.map { it.toDomainModel() } ?: emptyList()
-        } catch (e: Exception) {
-            Log.e(TAG, "Network error: ${e.message}")
-            emptyList()
+                ).body()
+                response?.results?.map { it.toDomainModel() } ?: emptyList()
+            } catch (e: Exception) {
+                Log.e(TAG, "Network error: ${e.message}")
+                emptyList()
+            }
         }
     }
+}
 
-    private fun OmdbMovie.toDomainModel(): Movie = Movie(
-        title = this.Title,
-        year = this.Year,
-        posterUrl = if (this.Poster != "N/A") this.Poster else null
+private fun Movie.toDomainModel(): Movie {
+    return Movie(
+        title = this.title,
+        releaseDate = this.releaseDate,
+        posterPath = this.posterPath,
+        overview = this.overview,
+        imdbID = this.imdbID
     )
 }
 

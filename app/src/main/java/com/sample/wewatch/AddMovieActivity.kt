@@ -46,8 +46,8 @@ open class AddMovieActivity : AppCompatActivity() {
         titleEditText.setText(it.title)
         releaseDateEditText.setText(it.releaseDate)
         movieImageView.tag = it.posterPath
-        if (it.posterPath.isNotEmpty()) {
-          Picasso.get().load(RetrofitClient.TMDB_IMAGEURL + it.posterPath).into(movieImageView)
+        if (it.posterPath?.isNotEmpty() == true && it.posterPath != "N/A") {
+          Picasso.get().load(RetrofitClient.IMAGE_URL + it.posterPath).into(movieImageView)
         }
       }
     }
@@ -102,7 +102,6 @@ open class AddMovieActivity : AppCompatActivity() {
   private fun showToast(message: String) {
     Toast.makeText(this, message, Toast.LENGTH_LONG).show()
   }
-
 
   companion object {
     const val SEARCH_MOVIE_ACTIVITY_REQUEST_CODE = 2

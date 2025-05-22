@@ -42,10 +42,10 @@ class MainAdapter(
     val movie = movieList[position]
     holder.titleTextView.text = movie.title
     holder.releaseDateTextView.text = movie.releaseDate
-    if (movie.posterPath.isEmpty()) {
+    if (movie.posterPath.isNullOrEmpty() || movie.posterPath == "N/A") {
       holder.movieImageView.setImageDrawable(context.getDrawable(R.drawable.ic_local_movies_gray))
     } else {
-      Picasso.get().load(RetrofitClient.TMDB_IMAGEURL + movie.posterPath).into(holder.movieImageView)
+      Picasso.get().load(RetrofitClient.IMAGE_URL + movie.posterPath).into(holder.movieImageView)
     }
     holder.checkBox.isChecked = selectedMovies.contains(movie)
     holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
