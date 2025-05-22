@@ -18,10 +18,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sample.wewatch.model.LocalDataSource
 import com.sample.wewatch.model.Movie
 import androidx.activity.viewModels
-//viewModels???
 import com.sample.wewatch.model.MovieRepository
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import androidx.activity.result.contract.ActivityResultContracts
 
 import io.reactivex.annotations.NonNull
 import io.reactivex.disposables.CompositeDisposable
@@ -38,7 +38,13 @@ class MainActivity : AppCompatActivity() {
   private val viewModel: MainViewModel by viewModels {
     MainViewModelFactory(MovieRepository(LocalDataSource(application)))
   }
-
+  private val addMovieLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    if (result.resultCode == RESULT_OK) {
+      showToast("Movie successfully added.")
+    } else {
+      showToast("Movie could not be added.")
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -92,16 +98,8 @@ class MainActivity : AppCompatActivity() {
 
   fun goToAddMovieActivity(v: View) {
     val intent = Intent(this, AddMovieActivity::class.java)
-    startActivityForResult(intent, ADD_MOVIE_ACTIVITY_REQUEST_CODE)
-  }
-
-  override fun onActivityResult(requestCode disposing: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    if (requestCode == ADD_MOVIE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
-      showToast("Movie successfully added.")
-    } else {
-      showToast("Movie could not be added.")
-    }
+      //startActivityForResult(intent, ADD_MOVIE_ACTIVITY_REQUEST_CODE)
+    addMovieLauncher.launch(intent)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

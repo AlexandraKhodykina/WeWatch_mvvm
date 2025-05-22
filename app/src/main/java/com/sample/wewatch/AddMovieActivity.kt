@@ -15,6 +15,7 @@ import androidx.activity.viewModels
 import com.sample.wewatch.model.MovieRepository
 //import com.sample.wewatch.network.RetrofitClient.TMDB_IMAGEURL
 import com.squareup.picasso.Picasso
+import com.sample.wewatch.network.RetrofitClient
 
 open class AddMovieActivity : AppCompatActivity() {
   private lateinit var titleEditText: EditText
