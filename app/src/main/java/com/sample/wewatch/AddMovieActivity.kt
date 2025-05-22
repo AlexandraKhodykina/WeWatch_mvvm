@@ -16,14 +16,28 @@ import com.sample.wewatch.model.MovieRepository
 //import com.sample.wewatch.network.RetrofitClient.TMDB_IMAGEURL
 import com.squareup.picasso.Picasso
 import com.sample.wewatch.network.RetrofitClient
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import com.sample.wewatch.model.RemoteDataSource
 
-open class AddMovieActivity : AppCompatActivity() {
+class AddMovieActivity : AppCompatActivity() {
   private lateinit var titleEditText: EditText
   private lateinit var releaseDateEditText: EditText
   private lateinit var movieImageView: ImageView
   //private lateinit var dataSource: LocalDataSource
   private val viewModel: AddMovieViewModel by viewModels {
-    AddMovieViewModelFactory(MovieRepository(LocalDataSource(application)))
+    AddMovieViewModelFactory(MovieRepository(LocalDataSource(application), RemoteDataSource()))
+  }
+
+  private val searchMovieLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    if (result.resultCode == RESULT_OK) {
+      val data = result.data
+      val title = data?.getStringExtra(SearchActivity.EXTRA_TITLE) ?: ""
+      val releaseDate = data?.getStringExtra(SearchActivity.EXTRA_RELEASE_DATE) ?: ""
+      val posterPath = data?.getStringExtra(SearchActivity.EXTRA_POSTER_PATH) ?: ""
+      val imdbID = data?.getStringExtra(SearchActivity.EXTRA_IMDB_ID) ?: ""
+      viewModel.setMovieData(title, releaseDate, posterPath, imdbID)
+    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +70,7 @@ open class AddMovieActivity : AppCompatActivity() {
     // Наблюдение за результатом добавления
     viewModel.addMovieResult.observe(this) { success ->
       if (success) {
-        setResult(Activity.RESULT_OK)
+        setResult(RESULT_OK)
         finish()
       } else {
         showToast("Movie could not be added.")
@@ -76,7 +90,7 @@ open class AddMovieActivity : AppCompatActivity() {
     val title = titleEditText.text.toString()
     val intent = Intent(this, SearchActivity::class.java)
     intent.putExtra(SearchActivity.SEARCH_QUERY, title)
-    startActivityForResult(intent, SEARCH_MOVIE_ACTIVITY_REQUEST_CODE)
+    searchMovieLauncher.launch(intent)
   }
 
   fun onClickAddMovie(v: View) {
@@ -88,16 +102,6 @@ open class AddMovieActivity : AppCompatActivity() {
     val releaseDate = releaseDateEditText.text.toString()
     val posterPath = movieImageView.tag?.toString() ?: ""
     viewModel.addMovie(title, releaseDate, posterPath)
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    if (requestCode == SEARCH_MOVIE_ACTIVITY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-      val title = data?.getStringExtra(SearchActivity.EXTRA_TITLE) ?: ""
-      val releaseDate = data?.getStringExtra(SearchActivity.EXTRA_RELEASE_DATE) ?: ""
-      val posterPath = data?.getStringExtra(SearchActivity.EXTRA_POSTER_PATH) ?: ""
-      viewModel.setMovieData(title, releaseDate, posterPath)
-    }
   }
 
   private fun showToast(message: String) {

@@ -20,7 +20,25 @@ data class TmdbResponse (
   @SerializedName("Response")
   @Expose
   var response: Boolean? = false,
+
   @SerializedName("Search")
   @Expose
-  var results: List<Movie>? = null
+  var results: List<Movie>? = null,
+  @SerializedName("Error")
+  @Expose
+  var error: String? = null
+
 )
+
+
+
+
+
+
+
+
+
+
+
+
+

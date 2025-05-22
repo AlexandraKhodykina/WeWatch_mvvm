@@ -24,15 +24,17 @@ class SearchViewModel (private val repository: MovieRepository) : ViewModel() {
 
     fun searchMovies(query: String) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                val movies = repository.getMoviesFromApi(query)
-                _searchResults.value = movies
-            } catch (e: Exception) {
-                _errorMessage.value = "Error fetching movies: ${e.message}"
-                _searchResults.value = emptyList()
-            } finally {
-                _isLoading.value = false
+            _isLoading.value = true
+            val result = repository.getMoviesFromApi(query)
+            _isLoading.value = false
+            when {
+                result.isSuccess -> {
+                    _searchResults.value = result.getOrDefault(emptyList())
+                }
+                result.isFailure -> {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Error fetching movies"
+                    _searchResults.value = emptyList()
+                }
             }
         }
     }

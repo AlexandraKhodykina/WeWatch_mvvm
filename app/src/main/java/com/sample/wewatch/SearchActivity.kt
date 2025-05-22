@@ -21,6 +21,7 @@ import com.sample.wewatch.model.MovieRepository
 import com.sample.wewatch.model.TmdbResponse
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import androidx.activity.viewModels
 
 import io.reactivex.annotations.NonNull
 import io.reactivex.disposables.CompositeDisposable
@@ -91,7 +92,8 @@ private fun setupObservers() {
       replyIntent.putExtra(EXTRA_TITLE, it.title)
       replyIntent.putExtra(EXTRA_RELEASE_DATE, it.getReleaseYearFromDate())
       replyIntent.putExtra(EXTRA_POSTER_PATH, it.posterPath)
-      setResult(Activity.RESULT_OK, replyIntent)
+      replyIntent.putExtra(EXTRA_IMDB_ID, it.imdbID)
+      setResult(RESULT_OK, replyIntent)
       finish()
     }
   }
@@ -106,6 +108,7 @@ companion object {
   const val EXTRA_TITLE = "SearchActivity.TITLE_REPLY"
   const val EXTRA_RELEASE_DATE = "SearchActivity.RELEASE_DATE_REPLY"
   const val EXTRA_POSTER_PATH = "SearchActivity.POSTER_PATH_REPLY"
+  const val EXTRA_IMDB_ID = "SearchActivity.IMDB_ID_REPLY"
 }
 
 }

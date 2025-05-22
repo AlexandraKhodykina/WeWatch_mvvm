@@ -10,46 +10,48 @@ import kotlinx.coroutines.launch
 
 class MainViewModel (private val repository: MovieRepository) : ViewModel() {
 
-    val movies: LiveData<List<Movie>> = repository.getAllMovies()
+    val movies: LiveData<List<Movie>> = repository.movies
 
-    // Состояния UI
-    private val _isLoading = MutableLiveData<Boolean>(false)
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _navigateToAddMovie = MutableLiveData<Boolean>()
+    val navigateToAddMovie: LiveData<Boolean> = _navigateToAddMovie
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _selectedMovies = MutableLiveData<Set<Movie>>(emptySet())
+    val selectedMovies: LiveData<Set<Movie>> = _selectedMovies
 
-    fun insertMovie(movie: Movie) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                repository.insertMovie(movie)
-            } catch (e: Exception) {
-                _errorMessage.value = "Error adding movie: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
+    fun onAddMovieClicked() {
+        _navigateToAddMovie.value = true
+    }
+
+    fun onAddMovieNavigated() {
+        _navigateToAddMovie.value = false
     }
 
     fun deleteMovie(movie: Movie) {
         viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                repository.deleteMovie(movie)
-            } catch (e: Exception) {
-                _errorMessage.value = "Error deleting movie: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
+            repository.deleteMovie(movie)
         }
     }
 
-    fun clearErrorMessage() {
-        _errorMessage.value = null
+    fun deleteMovies(movies: List<Movie>) {
+        viewModelScope.launch {
+            repository.deleteMovies(movies)
+        }
+    }
+
+    fun toggleMovieSelection(movie: Movie) {
+        val currentSelection = _selectedMovies.value?.toMutableSet() ?: mutableSetOf()
+        if (currentSelection.contains(movie)) {
+            currentSelection.remove(movie)
+        } else {
+            currentSelection.add(movie)
+        }
+        _selectedMovies.value = currentSelection
+    }
+
+    fun clearSelection() {
+        _selectedMovies.value = emptySet()
     }
 }
-
 
 
 

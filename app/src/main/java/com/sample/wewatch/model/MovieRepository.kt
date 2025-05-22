@@ -4,12 +4,11 @@ import androidx.lifecycle.LiveData
 
 class MovieRepository (
     private val localDataSource: LocalDataSource,
-    private val remoteDataSource: RemoteDataSource? = null
+    private val remoteDataSource: RemoteDataSource
 ) {
-    // 1. Возвращаем LiveData из LocalDataSource
-    fun getAllMovies(): LiveData<List<Movie>> = localDataSource.getAllMovies()
+    val movies: LiveData<List<Movie>> = localDataSource.getAllMovies()
 
-    suspend fun insertMovie(movie: Movie) {
+    suspend fun addMovie(movie: Movie) {
         localDataSource.insert(movie)
     }
 
@@ -17,9 +16,12 @@ class MovieRepository (
     suspend fun deleteMovie(movie: Movie) {
         localDataSource.delete(movie)
     }
+    suspend fun deleteMovies(movies: List<Movie>) {
+        movies.forEach { localDataSource.delete(it) }
+    }
 
     // 3. нужно работать с API (опционально)
-    suspend fun getMoviesFromApi(query: String): List<Movie> {
-        return remoteDataSource?.searchMovies(query) ?: emptyList()
+    suspend fun getMoviesFromApi(query: String): Result<List<Movie>> {
+        return remoteDataSource.searchMovies(query)
     }
 }

@@ -1,10 +1,10 @@
 package com.sample.wewatch.model
 
 import android.app.Application
+import androidx.room.Room
 import androidx.lifecycle.LiveData
 import io.reactivex.Observable
 import kotlin.concurrent.thread
-
 
 open class LocalDataSource(application: Application) {
 
@@ -27,10 +27,13 @@ open class LocalDataSource(application: Application) {
   suspend fun insertMovies(movies: List<Movie>) {
     movieDao.insertAll(movies)
   }
-  // 4. Удаление по ID (suspend)
   suspend fun delete(movie: Movie) {
-    movieDao.delete(movie.id)
+    movie.imdbID.let { movieDao.delete(it) }
   }
+  suspend fun deleteMovies(movies: List<Movie>) {
+    movieDao.deleteMovies(movies.map { it.imdbID })
+  }
+
   // 5. Удаление всех (suspend)
   suspend fun deleteAll() {
     movieDao.deleteAll()

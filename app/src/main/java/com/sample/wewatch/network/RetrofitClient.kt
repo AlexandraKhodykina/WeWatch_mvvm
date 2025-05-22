@@ -1,12 +1,14 @@
 package com.sample.wewatch.network
 
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    const val API_KEY = "1dbc7755" // Вынесите в BuildConfig на проде!
+    const val API_KEY = "1dbc7755"
     const val BASE_URL = "https://www.omdbapi.com/"
     const val IMAGE_URL = ""
     //const val TMDB_IMAGEURL = "https://m.media-amazon.com/images/M/"
@@ -16,10 +18,17 @@ object RetrofitClient {
   const val TMDB_IMAGEURL = "https://image.tmdb.org/t/p/w500/"
 */
     val moviesApi: RetrofitInterface by lazy {
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        val client = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .build()
+
         Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
-            // Убираем RxJava-адаптер, т.к. переходим на корутины
             .build()
             .create(RetrofitInterface::class.java)
     }

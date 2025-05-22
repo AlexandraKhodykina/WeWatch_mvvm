@@ -8,12 +8,9 @@ import com.google.gson.annotations.SerializedName
 @Entity(tableName = "movie_table")
 data class Movie(
   @PrimaryKey
-  @SerializedName("id")
-  @Expose
-  var id: Int? = null,
   @SerializedName("imdbID")
   @Expose
-  var imdbID: String? = null,
+  var imdbID: String,
 
   @SerializedName("Title")
   @Expose

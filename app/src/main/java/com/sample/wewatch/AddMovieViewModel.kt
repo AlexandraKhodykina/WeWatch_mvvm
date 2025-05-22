@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.sample.wewatch.model.Movie
 import com.sample.wewatch.model.MovieRepository
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class AddMovieViewModel (private val repository: MovieRepository) : ViewModel() {
 
@@ -19,23 +20,31 @@ class AddMovieViewModel (private val repository: MovieRepository) : ViewModel() 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    fun setMovieData(title: String, releaseDate: String, posterPath: String) {
-        _movieData.value = Movie(title = title, releaseDate = releaseDate, posterPath = posterPath)
+    fun setMovieData(title: String, releaseDate: String, posterPath: String, imdbID: String) {
+        _movieData.value = Movie(
+            imdbID = imdbID,
+            title = title,
+            releaseDate = releaseDate,
+            posterPath = posterPath,
+            overview = ""
+        )
     }
 
-    fun addMovie(title: String, releaseDate: String, posterPath: String) {
-        if (title.isEmpty()) {
-            _errorMessage.value = "Movie title cannot be empty"
-            return
-        }
+    fun addMovie(title: String, releaseDate: String, posterPath: String, imdbID: String = "temp_${UUID.randomUUID()}") {
         viewModelScope.launch {
             try {
-                val movie = Movie(title = title, releaseDate = releaseDate, posterPath = posterPath)
-                repository.insertMovie(movie)
-                _addMovieResult.value = true
+                val movie = Movie(
+                    imdbID = imdbID,
+                    title = title,
+                    releaseDate = releaseDate,
+                    posterPath = posterPath,
+                    overview = ""
+                )
+                repository.addMovie(movie)
+                _addMovieResult.postValue(true)
             } catch (e: Exception) {
-                _errorMessage.value = "Error adding movie: ${e.message}"
-                _addMovieResult.value = false
+                _errorMessage.postValue("Failed to add movie: ${e.message}")
+                _addMovieResult.postValue(false)
             }
         }
     }
@@ -44,3 +53,13 @@ class AddMovieViewModel (private val repository: MovieRepository) : ViewModel() 
         _errorMessage.value = null
     }
 }
+
+
+
+
+
+
+
+
+
+

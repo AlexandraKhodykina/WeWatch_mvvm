@@ -21,8 +21,11 @@ interface MovieDao {
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insert(movie: Movie)
 
-  @Query("DELETE FROM movie_table WHERE id = :id")
-  suspend fun delete(id: Int?)
+  @Query("DELETE FROM movie_table WHERE imdbID = :imdbID")
+  suspend fun delete(imdbID: String)
+
+  @Query("DELETE FROM movie_table WHERE imdbID IN (:imdbIDs)")
+  suspend fun deleteMovies(imdbIDs: List<String>)
 
   @Query("DELETE FROM movie_table")
   suspend fun deleteAll()
