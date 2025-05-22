@@ -11,7 +11,7 @@ data class TmdbResponse (
   */
   @SerializedName("totalResults")
   @Expose
-  var totalResults: Int? = null,
+  val totalResults: Int? = null,
   /*
   @SerializedName("total_pages")
   @Expose
@@ -19,14 +19,14 @@ data class TmdbResponse (
   */
   @SerializedName("Response")
   @Expose
-  var response: Boolean? = false,
+  val response: Boolean? = false,
 
   @SerializedName("Search")
   @Expose
-  var results: List<Movie>? = null,
+  val results: List<Movie>? = null,
   @SerializedName("Error")
   @Expose
-  var error: String? = null
+  val error: String? = null
 
 )
 

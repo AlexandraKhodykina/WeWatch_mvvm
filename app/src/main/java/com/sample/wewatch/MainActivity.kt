@@ -22,7 +22,8 @@ import com.sample.wewatch.model.MovieRepository
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import androidx.activity.result.contract.ActivityResultContracts
-
+import androidx.activity.viewModels
+import com.sample.wewatch.model.RemoteDataSource
 import io.reactivex.annotations.NonNull
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity() {
   private lateinit var noMoviesLayout: LinearLayout
 
   private val viewModel: MainViewModel by viewModels {
-    MainViewModelFactory(MovieRepository(LocalDataSource(application)))
+    MainViewModelFactory(MovieRepository(LocalDataSource(application), RemoteDataSource()))
   }
   private val addMovieLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
     if (result.resultCode == RESULT_OK) {
@@ -71,17 +72,15 @@ class MainActivity : AppCompatActivity() {
       displayMovies(movies)
     }
 
-    // Наблюдение за ошибками
-    viewModel.errorMessage.observe(this) { error ->
-      error?.let {
-        showToast(it)
-        viewModel.clearErrorMessage()
+    viewModel.navigateToAddMovie.observe(this) { navigate ->
+      if (navigate == true) {
+        goToAddMovieActivity(fab)
+        viewModel.onAddMovieNavigated()
       }
     }
 
-    // Наблюдение за состоянием загрузки
-    viewModel.isLoading.observe(this) { isLoading ->
-      // Можно добавить ProgressBar в layout и показывать/скрывать его
+    viewModel.selectedMovies.observe(this) { selectedMovies ->
+      invalidateOptionsMenu()
     }
   }
 
@@ -109,16 +108,13 @@ class MainActivity : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     if (item.itemId == R.id.deleteMenuItem) {
-      adapter.getSelectedMovies().forEach { movie ->
-        viewModel.deleteMovie(movie)
+      val selectedMovies = adapter.getSelectedMovies()
+      if (selectedMovies.isNotEmpty()) {
+        viewModel.deleteMovies(selectedMovies.toList())
+        val count = selectedMovies.size
+        showToast(if (count == 1) "Movie deleted" else "Movies deleted")
+        adapter.clearSelection()
       }
-      val count = adapter.getSelectedMovies().size
-      if (count == 1) {
-        showToast("Movie deleted")
-      } else if (count > 1) {
-        showToast("Movies deleted")
-      }
-      adapter.clearSelection()
     }
     return super.onOptionsItemSelected(item)
   }
@@ -132,3 +128,19 @@ class MainActivity : AppCompatActivity() {
   }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -30,21 +30,24 @@ open class RemoteDataSource {
                     apiKey = RetrofitClient.API_KEY,
                     query = query
                 )
+                Log.d(TAG, "HTTP Response Code: ${response.code()}")
                 if (response.isSuccessful) {
                     val body = response.body()
+                    Log.d(TAG, "Response Body: $body")
                     if (body?.response == true && body.results != null) {
-                        Result.success(body.results.map { it.toDomainModel() })
+                        Result.success(body.results.mapNotNull { it.toDomainModel() })
                     } else {
                         Result.failure(Exception(body?.error ?: "No movies found"))
                     }
                 } else {
+                    Log.e(TAG, "HTTP Error: ${response.message()}, Code: ${response.code()}")
                     Result.failure(HttpException(response))
                 }
             } catch (e: IOException) {
                 Log.e(TAG, "Network error: ${e.message}")
                 Result.failure(e)
             } catch (e: HttpException) {
-                Log.e(TAG, "HTTP error: ${e.message}")
+                Log.e(TAG, "HTTP error: ${e.message()}, Code: ${e.code()}")
                 Result.failure(e)
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error: ${e.message}")
@@ -54,14 +57,21 @@ open class RemoteDataSource {
     }
 }
 
-private fun Movie.toDomainModel(): Movie {
-    return Movie(
-        title = this.title,
-        releaseDate = this.releaseDate,
-        posterPath = this.posterPath,
-        overview = this.overview,
-        imdbID = this.imdbID
-    )
+private fun Movie.toDomainModel(): Movie? {
+    val imdbID = this.imdbID
+    return if (!imdbID.isNullOrEmpty()) {
+        Movie(
+            imdbID = imdbID,
+            title = this.title,
+            releaseDate = this.releaseDate,
+            posterPath = this.posterPath,
+            overview = this.overview,
+            watched = this.watched
+        )
+    } else {
+        Log.w("RemoteDataSource", "Skipping movie with null or empty imdbID: $this")
+        null
+    }
 }
 
 

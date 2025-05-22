@@ -26,7 +26,7 @@ class MainAdapter(
     notifyDataSetChanged()
   }
 
-  fun getSelectedMovies(): Set<Movie> = selectedMovies
+  fun getSelectedMovies(): List<Movie> = selectedMovies.toList()
 
   fun clearSelection() {
     selectedMovies.clear()
